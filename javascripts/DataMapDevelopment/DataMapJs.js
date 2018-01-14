@@ -51,13 +51,9 @@ var initializeDataMapCache = function(section_start_hashes, position, section_wi
 	//get first section 
 	if(position == "BEGINNING"){
 		
-		var start_hash = section_start_hashes[0][1];
+		var start_hash = section_start_hashes[0].hash;
 			//start at beginning and go to section length
-		for(var i = 0; i < last_section_length; i++){
-
-			
-
-		}
+		var mapSection = buildSectionOfDataMap(start_hash, section_width_in_chunks);
 			
 		
 	}
@@ -72,7 +68,7 @@ var initializeDataMapCache = function(section_start_hashes, position, section_wi
 		
 		var start_index =  num_chunks - last_section_length;
 		
-		var start_hash = section_start_hashes[start_index];
+		var start_hash = section_start_hashes[start_index].hash;
 		
 		var mapSection = buildSectionOfDataMap(start_hash, last_section_length);
 			
