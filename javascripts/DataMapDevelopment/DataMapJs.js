@@ -45,22 +45,19 @@ var initializeCaches = function(caches, pointers, section_width, total_chunks){
 }
 
 //@param position String 'BEGINNING' or 'END'.  If the end it gets the last section.
+//on hindsight this method is not needed as it will push a section into the cache if the chunk is not in it.
 var initializeDataMapCache = function(section_start_hashes, position, section_width_in_chunks, num_chunks){
 
 	var dataMapCache = [];
 	
-	//get first section 
 	if(position == "BEGINNING"){
 		
 		var start_hash = section_start_hashes[0].hash;
-			//start at beginning and go to section length
 		var mapSection = buildSectionOfDataMap(start_hash, section_width_in_chunks);
-			
+		dataMapCache.push(mapSection);	
 		
 	}
-	//get last section
-	
-	
+
 	//return the cache on the end
 	else if(position == "END"){
 		
@@ -72,19 +69,14 @@ var initializeDataMapCache = function(section_start_hashes, position, section_wi
 		var start_hash = section_start_hashes[start_index].hash;
 		
 		var mapSection = buildSectionOfDataMap(start_hash, last_section_length);
+		dataMapCache.push(mapSection);
 			
-			
-		}
-		//build section and add
-		
-		
+		}				
 	return dataMapCache;
 
 }
 	
 
-
-//comment
 var findSectionStartHashes = function(genesis_hash, section_width, num_entries, testing){
 
 	var chunk_id = 0;
@@ -117,11 +109,13 @@ var findSectionStartHashes = function(genesis_hash, section_width, num_entries, 
 
 var getHashFromChunkNumber = function(section_width, chunk_number, indexHashes, cache, cache_limit){
 
-	//put these in configuration
-	
-	
 	//check cache
 	var hash = checkCache(chunk_number, cache);
+	
+	//find section start index hash previous to chunk num
+	
+	var startIndexHash = getStartIndexHash(indexHashes, chunk_number);
+	
 	
 	if(hash == NOT_IN_CACHE_STATUS){
 				
@@ -139,10 +133,64 @@ var getHashFromChunkNumber = function(section_width, chunk_number, indexHashes, 
 }
 
 
-var buildSectionOfDataMap = function(){
-
+//
+var getNextHash = function(previous_hash) {
+  
+  return CryptoJS.SHA256(previous_hash);
+  
 }
 
+//FOR TESTING
+var getNextHashTEST = function(previous_hash) {
+  
+  return previous_hash + 1;
+  
+}
+
+
+
+var buildSectionOfDataMap = function(section_width, start_hash, chunk_num, test=false){
+	
+	var section = [];
+	
+	var hash = start_hash;
+	
+	var chunk_id = chunk_num;
+	
+	for(var i = 0; i < section_width; i++){
+		
+		//console.log({chunk_id: hash});
+		
+		section.push({ chunk_id, hash });
+		
+		if(!test){
+			hash = getNextHash(hash);
+		}
+		else{
+			hash = getNextHashTEST(hash);
+		}
+		chunk_id++;
+	}
+	
+	return section;
+}
+
+var testBuildSectionOfDataMap = function(){
+	
+	var map = buildSectionOfDataMap(3,1,1,true);
+	
+	console.log(map);
+	
+	console.log(map[0]);
+	
+	console.log(map[0].chunk_id);
+	console.log(map[0].hash);
+	
+	
+	console.log("should be  [{1:1},{2:2},{3:3}]");
+}
+
+testBuildSectionOfDataMap();
 
 
 
@@ -160,21 +208,6 @@ var checkCache = function(chunk_number, cache){
 
 
 	
-
-//
-var getNextHash = function(previous_hash) {
-  
-  return CryptoJS.SHA256(previous_hash);
-  
-}
-
-//FOR TESTING
-var getNextHashTEST = function(previous_hash) {
-  
-  return previous_hash + 1;
-  
-}
-
 
 
 
