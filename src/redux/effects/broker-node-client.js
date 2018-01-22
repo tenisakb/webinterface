@@ -2,7 +2,7 @@ import axios from "axios";
 
 // TODO: Put all interactions with backend here.
 
-const BROKER_NODE_URL = "https://www.google.com"; // TODO: Real url.
+const BROKER_NODE_URL = "http://localhost:8000"; // TODO: Real url.
 const POLLING_FREQ = 4000; // 4 seconds.
 const POLLING_TIMEOUT = 100000000; // TODO: Agree on a timeout value.
 
@@ -21,10 +21,13 @@ const CHUNK_STATUSES_API = Object.freeze({
  * @returns promise that resolve when chunk status is complete and rejects
  * when status is not (complete || pending) or timeout.
  */
-export const pollUntilComplete = (genHash, chunkIdx) =>
+export const pollUntilComplete = (genHash, chunkIdx, chunkHash) =>
   new Promise((resolve, reject) => {
     const startTs = Date.now();
-    const params = { genesis_hash: genHash, chunk_idx: chunkIdx };
+    const params = {
+      genesis_hash: genHash,
+      chunk: { idx: chunkIdx, hash: chunkIdx }
+    };
 
     const pollInterval = setInterval(() => {
       if (Date.now() > startTs + POLLING_TIMEOUT) {
@@ -34,7 +37,7 @@ export const pollUntilComplete = (genHash, chunkIdx) =>
 
       axios
         .get(`${BROKER_NODE_URL}/api/v1/chunk-status`, params)
-        .then(({ status }) => {
+        .then(({ data: { status } }) => {
           switch (status) {
             case CHUNK_STATUSES_API.PENDING:
               return; // continue polling.
