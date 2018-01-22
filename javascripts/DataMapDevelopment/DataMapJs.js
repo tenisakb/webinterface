@@ -20,6 +20,7 @@ var pointers = [];
 //we use two caches, one for the forward reading process and one for the backwards reading process
 var initializeCaches = function(pointers, section_width, total_chunks, testing){
 	 
+	console.log("init");
 	 
 	var caches = [
 		[],
@@ -30,8 +31,16 @@ var initializeCaches = function(pointers, section_width, total_chunks, testing){
 	var left_cache = initializeDataMapCache(pointers, "BEGINNING", section_width, total_chunks, testing);
 	caches[0] = left_cache; 
 	
+	console.log(left_cache);
+	
+	left_cache = [left_cache[0]];
+	
+	//console.log("left2");
+	//console.log(left2);
 	var right_cache = initializeDataMapCache(pointers, "END", section_width, total_chunks, testing);
 	caches[1] = right_cache;
+	
+	console.log(right_cache);
 	
 	//right cache - given time look into making this a map
 	return caches;
@@ -46,27 +55,44 @@ var initializeDataMapCache = function(section_start_hashes, position, section_wi
 	if(position == "BEGINNING"){
 		
 		var start_hash = section_start_hashes[0].hash;
+		console.log("start hash");
+		console.log(start_hash);
 		console.log(testing);
-		var mapSection = buildSectionOfDataMap(start_hash, section_width_in_chunks, testing);
+		var mapSection = buildSectionOfDataMap(section_width_in_chunks, start_hash, 1, testing);
 		dataMapCache.push(mapSection);	
-		
+		console.log(mapSection);
+		console.log(dataMapCache);
+		return dataMapCache;
 	}
 
-	//return the cache on the end
+	//return the cache on the end,sorry about code debt here, have to know what is going on to follow
 	else if(position == "END"){
 		
 		//we may not grab a full section
 		var last_section_length = num_chunks % section_width_in_chunks;
 		
+
+		
+		if(last_section_length == 0){
+			last_section_length = section_width_in_chunks;
+		}
+		
+		console.log(num_chunks);
+		console.log(section_width_in_chunks);
+		console.log(last_section_length);
 		
 		var start_hash = section_start_hashes[section_start_hashes.length-1].hash;
-		
-		var mapSection = buildSectionOfDataMap(start_hash, last_section_length, testing);
+		var start_chunk_num = section_start_hashes[section_start_hashes.length-1].chunk_id;
+		var mapSection = buildSectionOfDataMap(last_section_length, start_hash, start_chunk_num, testing);
 		
 		dataMapCache.push(mapSection);
 			
-		}				
+		}		
+	console.log(dataMapCache);
+	
 	return dataMapCache;
+	
+
 
 }
 	
@@ -101,30 +127,66 @@ var findSectionStartHashes = function(genesis_hash, section_width, num_entries, 
 
 
 
-var getHashFromChunkNumber = function(section_width, chunk_number, indexHashes, cache, cache_limit){
+var getHashFromChunkNumber = function(section_width, chunk_number, indexHashes, cache, cache_limit, testing){
 
+	console.log("entering");
+	console.log(cache);
 	//check cache
 	var hash = checkCache(chunk_number, cache);
 	
 	//find section start index hash previous to chunk num
 	
-	var startIndexHash = getStartIndexHash(indexHashes, chunk_number);
-	
-	
+	var index_hash = getStartIndexHash(indexHashes, chunk_number);
+	var start_hash = index_hash[0];
+	var start_num = index_hash[1];
+	console.log(index_hash);
+	console.log(start_hash);
 	if(hash == NOT_IN_CACHE_STATUS){
 				
+		console.log("notincash");
 		//build section
-		var data_map_section = buildSectionOfDataMap(section_width, start_hash);
+		var data_map_section = buildSectionOfDataMap(section_width, start_hash, start_num, testing);
 		
+		console.log("new section");
+		console.log(cache);
 		//add section
 		cache.push(data_map_section);
 		
+		console.log("before removal");
+		console.log(cache);
 		if(cache.length > cache_limit)
 			cache.shift();
 		//remove oldest section if more than 5 sections
-		
+		console.log(cache);
+	}
+	var hash = checkCache(chunk_number, cache);
+	
+	return hash;
+	
+}
+
+var getStartIndexHash = function(indexHashes, chunk_number){
+	
+	console.log(chunk_number);
+	console.log(indexHashes);
+	var lastIndexHash;
+	for(var indexHash in indexHashes){
+		console.log(indexHash);
+		console.log(indexHashes[indexHash]);
+		console.log(indexHash.hash);
+		//console.log(indexHash.chunk_id);
+		console.log(chunk_number);
+		//this will never be true for the first pointer
+		if(indexHashes[indexHash].chunk_id >= chunk_number){
+			
+			return [indexHashes[lastIndexHash].hash,indexHashes[lastIndexHash].chunk_id];
+		}
+		else{
+			lastIndexHash = indexHash;
+		}
 	}
 }
+
 
 
 //
@@ -192,10 +254,12 @@ testBuildSectionOfDataMap();
 
 var checkCache = function(chunk_number, cache){
 
+	console.log(cache);
 	for(cache_section in cache){
 		console.log(cache_section);
-		if(chunk_number in cache.keys()){
-			return cache_section[chunk_number];
+		
+		for(chunk in cache_section){
+			console.log(cache);
 		}
 	}
 	return NOT_IN_CACHE_STATUS;
@@ -254,8 +318,11 @@ var TestInitializeCaches = function(){
 	
 	//first test is:
 	//cache a is [1:1,2:2,3:3], cache b is [25:25,26:26,27:27]
-	
+	console.log("CAHCES");
 	console.log(caches);
+	
+	var hash = getHashFromChunkNumber(section_width, 10, pointers, caches[0], 3);
+	console.log(hash);
 }
 
 TestInitializeCaches();
