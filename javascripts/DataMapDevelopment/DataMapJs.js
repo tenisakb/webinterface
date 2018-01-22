@@ -159,6 +159,8 @@ var getHashFromChunkNumber = function(section_width, chunk_number, indexHashes, 
 		//remove oldest section if more than 5 sections
 		console.log(cache);
 	}
+	console.log("after cache addition");
+	console.log(chunk_number, cache);
 	var hash = checkCache(chunk_number, cache);
 	
 	return hash;
@@ -258,8 +260,17 @@ var checkCache = function(chunk_number, cache){
 	for(cache_section in cache){
 		console.log(cache_section);
 		
-		for(chunk in cache_section){
-			console.log(cache);
+		for(chunk in cache[cache_section]){
+			
+			//
+			console.log(chunk);
+			console.log(cache_section);
+			console.log(cache_section[chunk]);
+			console.log(cache[cache_section][chunk]);
+			if(cache[cache_section][chunk].chunk_id == chunk_number){
+				return cache[cache_section][chunk].hash;
+			}
+			
 		}
 	}
 	return NOT_IN_CACHE_STATUS;
@@ -282,7 +293,7 @@ var testFindSectionStartHashes = function(){
 	
 	var testhashes = findSectionStartHashes(genesis_hash, wid, len, true);
 	
-	console.log("should be [0-1,3-2,6-7]");
+	//console.log("should be [0-1,3-4,6-7]");
 	console.log(testhashes);
 	
 	console.log(testhashes[0]);
