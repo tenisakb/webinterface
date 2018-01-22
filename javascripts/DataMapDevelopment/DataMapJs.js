@@ -58,7 +58,7 @@ var initializeDataMapCache = function(section_start_hashes, position, section_wi
 		console.log("start hash");
 		console.log(start_hash);
 		console.log(testing);
-		var mapSection = buildSectionOfDataMap(section_width_in_chunks, start_hash, 1, testing);
+		var mapSection = buildSectionOfDataMap(section_width_in_chunks, start_hash, 0, testing);
 		dataMapCache.push(mapSection);	
 		console.log(mapSection);
 		console.log(dataMapCache);
