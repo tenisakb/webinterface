@@ -11,21 +11,14 @@ var NOT_IN_CACHE_STATUS = "NOT_IN_CACHE";
 
 
 
-//these hold the caches for the two processes
-
 //these hold the pointers
 var pointers = [];
 
 
-//TODO write cache init.
-//TODO test with fake hash func
-//TODO have it work with the get hash function and tested
-//comment.  Done by tonight.  Easy to devug.
-// bit array for which chunks are done.
 
 
 //we use two caches, one for the forward reading process and one for the backwards reading process
-var initializeCaches = function(caches, pointers, section_width, total_chunks){
+var initializeCaches = function(pointers, section_width, total_chunks, testing){
 	 
 	 
 	var caches = [
@@ -34,10 +27,10 @@ var initializeCaches = function(caches, pointers, section_width, total_chunks){
 	];
 	
 	//left cache
-	var left_cache = initializeDataMapCache(pointers, "forward", section_width, total_chunks);
+	var left_cache = initializeDataMapCache(pointers, "BEGINNING", section_width, total_chunks, testing);
 	caches[0] = left_cache; 
 	
-	var right_cache = initializeDataMapCache(pointers, "backward", section_width, total_chunks);
+	var right_cache = initializeDataMapCache(pointers, "END", section_width, total_chunks, testing);
 	caches[1] = right_cache;
 	
 	//right cache - given time look into making this a map
@@ -46,14 +39,15 @@ var initializeCaches = function(caches, pointers, section_width, total_chunks){
 
 //@param position String 'BEGINNING' or 'END'.  If the end it gets the last section.
 //on hindsight this method is not needed as it will push a section into the cache if the chunk is not in it.
-var initializeDataMapCache = function(section_start_hashes, position, section_width_in_chunks, num_chunks){
+var initializeDataMapCache = function(section_start_hashes, position, section_width_in_chunks, num_chunks, testing){
 
 	var dataMapCache = [];
 	
 	if(position == "BEGINNING"){
 		
 		var start_hash = section_start_hashes[0].hash;
-		var mapSection = buildSectionOfDataMap(start_hash, section_width_in_chunks);
+		console.log(testing);
+		var mapSection = buildSectionOfDataMap(start_hash, section_width_in_chunks, testing);
 		dataMapCache.push(mapSection);	
 		
 	}
@@ -64,11 +58,11 @@ var initializeDataMapCache = function(section_start_hashes, position, section_wi
 		//we may not grab a full section
 		var last_section_length = num_chunks % section_width_in_chunks;
 		
-		var start_index =  num_chunks - last_section_length;
 		
-		var start_hash = section_start_hashes[start_index].hash;
+		var start_hash = section_start_hashes[section_start_hashes.length-1].hash;
 		
-		var mapSection = buildSectionOfDataMap(start_hash, last_section_length);
+		var mapSection = buildSectionOfDataMap(start_hash, last_section_length, testing);
+		
 		dataMapCache.push(mapSection);
 			
 		}				
@@ -149,7 +143,7 @@ var getNextHashTEST = function(previous_hash) {
 
 
 
-var buildSectionOfDataMap = function(section_width, start_hash, chunk_num, test=false){
+var buildSectionOfDataMap = function(section_width, start_hash, chunk_num, testing){
 	
 	var section = [];
 	
@@ -157,17 +151,19 @@ var buildSectionOfDataMap = function(section_width, start_hash, chunk_num, test=
 	
 	var chunk_id = chunk_num;
 	
+	var testing = true;
 	for(var i = 0; i < section_width; i++){
 		
 		//console.log({chunk_id: hash});
 		
 		section.push({ chunk_id, hash });
 		
-		if(!test){
-			hash = getNextHash(hash);
+		console.log(testing);
+		if(testing){
+			hash = getNextHashTEST(hash);
 		}
 		else{
-			hash = getNextHashTEST(hash);
+			hash = getNextHash(hash);	
 		}
 		chunk_id++;
 	}
@@ -241,9 +237,28 @@ testFindSectionStartHashes();
 
 
 var TestInitializeCaches = function(){
+	
+	var genesis_hash = 1;
+	var section_width = 3;
+	var num_chunks = 27;
+	var testing = true;
+	
+	var pointers = findSectionStartHashes(genesis_hash, section_width, num_chunks, testing)
+	
+	console.log(pointers);
+	var caches = initializeCaches(pointers, section_width, num_chunks, testing);
 
+		
+	//we pass a boolean indicating if they are in testing mode.  if they are the getnexthash function returns the number plus one,
+	//makes it easier to test
+	
+	//first test is:
+	//cache a is [1:1,2:2,3:3], cache b is [25:25,26:26,27:27]
+	
+	console.log(caches);
 }
 
+TestInitializeCaches();
 /*
 // //Generator to build section of map
 // function* buildSectionOfDataMapReversedGenerator(genesis_hash, section_width, number_chunks_total){
