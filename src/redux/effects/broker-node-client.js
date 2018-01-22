@@ -21,13 +21,10 @@ const CHUNK_STATUSES_API = Object.freeze({
  * @returns promise that resolve when chunk status is complete and rejects
  * when status is not (complete || pending) or timeout.
  */
-export const pollUntilComplete = (genHash, chunkIdx, chunkHash) =>
+export const pollUntilComplete = (genHash, chunkIdx) =>
   new Promise((resolve, reject) => {
     const startTs = Date.now();
-    const params = {
-      genesis_hash: genHash,
-      chunk: { idx: chunkIdx, hash: chunkIdx }
-    };
+    const params = { genesis_hash: genHash, chunk_idx: chunkIdx };
 
     const pollInterval = setInterval(() => {
       if (Date.now() > startTs + POLLING_TIMEOUT) {
