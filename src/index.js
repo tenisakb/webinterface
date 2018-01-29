@@ -15,11 +15,11 @@ const App = () => (
   <Provider store={store}>
     <PersistGate loading={null} persistor={persistor}>
       <Router>
-      <div>
-      	<Route exact path='/' component={Root} />
-      	<Route path="/uploadHistory" component={RootUploadHistory} />
-      </div>
-    </Router>
+        <div>
+      	 <Route exact path='/' component={Root} />
+      	 <Route path="/uploadHistory" component={RootUploadHistory} />
+        </div>
+      </Router>
     </PersistGate>
   </Provider>
 );

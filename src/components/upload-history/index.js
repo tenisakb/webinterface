@@ -3,18 +3,18 @@ import { connect } from "react-redux";
 import FileSaver from "file-saver";
 
 const mapStateToProps = state => ({
-  items: state.uploadHistory.items
+  items: state.upload.history
 });
 
 const mapDispatchToProps = dispatch => ({
 });
 
-function generateUploadHistoryFn(items) {
+function generateUploadHistoryFileFn(items) {
   let output = "";
-  if(items) {
+  if(items.length) {
     const items_map =  items.map((e, i) => (e));
     Object.keys(items_map).forEach((key) => {
-      output += items_map[key] + "\n";
+      output += items_map[key].handle + "\n";
     });
     let blob = new Blob([output], {type: "text/plain;charset=utf-8"});
     FileSaver.saveAs(blob, "uploadHistory.txt");
@@ -28,7 +28,7 @@ class UploadHistoryButton extends Component {
       <div>
         <button
           onClick={() => {
-            generateUploadHistoryFn(items);
+            generateUploadHistoryFileFn(items);
           }}
         >
           Generate upload history
