@@ -1,6 +1,8 @@
 import React from "react";
 import ReactDOM from "react-dom";
+
 import { BrowserRouter as Router, Route } from 'react-router-dom';
+
 import { Provider } from "react-redux";
 import { PersistGate } from "redux-persist/lib/integration/react";
 
@@ -8,7 +10,10 @@ import "index.css";
 
 import { store, persistor } from "./redux";
 import Root from "./components/root";
+<<<<<<< HEAD
 import DownloadUploadHistoryButton from "./components/upload-history";
+=======
+>>>>>>> master
 import registerServiceWorker from "./register-service-worker";
 // persistor.purge();
 
