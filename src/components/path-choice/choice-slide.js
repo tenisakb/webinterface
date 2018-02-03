@@ -25,14 +25,10 @@ const ChoiceSlide = ({ visitUploadFormFn, visitDownloadFormFn }) => (
       </div>
       <div className="choice-section">
         <img src={ICON_TANGLE_RIGHT} className="tangle-image" />
-        <div>
-          <img src={ICON_DOWNLOAD} className="upload-image" />
-        </div>
-        <div>
-          <PrimaryButton onClick={visitDownloadFormFn}>
-            Retrieve a File
-          </PrimaryButton>
-        </div>
+        <img src={ICON_DOWNLOAD} className="upload-image" />
+        <PrimaryButton onClick={visitDownloadFormFn}>
+          Retrieve a File
+        </PrimaryButton>
         <p className="instructions">
           Use an Oyster handle to retrieve a file from the Tangle.
         </p>

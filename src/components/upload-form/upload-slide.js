@@ -132,10 +132,14 @@ class UploadSlide extends Component {
             Start Upload
           </PrimaryButton>
         </div>
-        <aside className="disclaimer">
-          DISCLAIMER: No PRL is required to use the Testnet.<br />
-          Uploads cost 1 PRL per 64GB per Year.
-        </aside>
+        <div class="row">
+          <div class="col-xs-12">
+            <aside className="disclaimer">
+              DISCLAIMER: No PRL is required to use the Testnet.<br />
+              Uploads cost 1 PRL per 64GB per Year.
+            </aside>
+          </div>
+        </div>
       </Slide>
     );
   }

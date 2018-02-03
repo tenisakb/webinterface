@@ -1,7 +1,7 @@
 import React from "react";
 
 const PrimaryButton = ({ children, onClick }) => (
-  <button className="primary-button" onClick={onClick}>
+  <button className="btn btn-primary btn-lg" onClick={onClick}>
     {children}
   </button>
 );
