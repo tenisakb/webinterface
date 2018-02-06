@@ -5,7 +5,8 @@ export const API = Object.freeze({
   HOST: "https://broker-1.oysternodes.com",
   BROKER_NODE_A: "https://broker-1.oysternodes.com",
   BROKER_NODE_B: "https://broker-2.oysternodes.com",
-  V1_UPLOAD_SESSIONS_PATH: "/api/v1/upload-sessions"
+  V2_UPLOAD_SESSIONS_PATH: "/api/v2/upload-sessions",
+  CHUNKS_PER_REQUEST: 10
 });
 
 export const IOTA_API = Object.freeze({
