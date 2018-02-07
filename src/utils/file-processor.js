@@ -132,7 +132,7 @@ const createByteChunks = fileSizeBytes => {
 const createUploadSession = (host, fileSizeBytes, genesisHash) =>
   new Promise((resolve, reject) => {
     axiosInstance
-      .post(`${host}${API.V2_UPLOAD_SESSIONS_PATH}`, {
+      .post(`${host}${API.V1_UPLOAD_SESSIONS_PATH}`, {
         file_size_bytes: fileSizeBytes,
         genesis_hash: genesisHash,
         beta_brokernode_ip: API.BROKER_NODE_B
@@ -162,7 +162,7 @@ const readBlob = blob =>
 
 const createChunk = (blob, idx, genesisHash, handle) =>
   new Promise((resolve, reject) => {
-    readBlob.then(arrayBuffer => {
+    readBlob(blob).then(arrayBuffer => {
       const chunk = chunkGenerator({
         idx,
         data: chunkToIotaFormat(arrayBuffer, handle),
@@ -195,7 +195,7 @@ const sendFileContentsToBroker = (
   byteChunks,
   sliceCutOffFn
 ) => {
-  const batchedChunks = _.chunks(byteChunks, API.CHUNKS_PER_REQUEST);
+  const batchedChunks = _.chunk(byteChunks, API.CHUNKS_PER_REQUEST);
   const chunkRequests = batchedChunks.map(
     byteChunkBatch =>
       new Promise((resolve, reject) => {
@@ -307,5 +307,6 @@ export default {
   metaDataFromIotaFormat,
   chunkToIotaFormat,
   chunkFromIotaFormat,
-  mergeArrayBuffers
+  mergeArrayBuffers,
+  readBlob
 };
