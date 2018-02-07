@@ -222,11 +222,13 @@ const sendMetaDataToBroker = (host, sessionId, file, handle, genesisHash) =>
     const metaDataObject = createMetaDataObject(file);
     axiosInstance
       .put(`${host}${API.V2_UPLOAD_SESSIONS_PATH}/${sessionId}`, {
-        chunk: chunkGenerator({
-          idx: 0,
-          data: metaDataToIotaFormat(metaDataObject, handle),
-          hash: genesisHash
-        })
+        chunks: [
+          chunkGenerator({
+            idx: 0,
+            data: metaDataToIotaFormat(metaDataObject, handle),
+            hash: genesisHash
+          })
+        ]
       })
       .then(({ data }) => {
         console.log("METADATA TO BROKER SUCCESS: ", data);
