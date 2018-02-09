@@ -61,18 +61,26 @@ const chunkFromIotaFormat = (trytes, handle) => {
 };
 
 const mergeArrayBuffers = arrayBuffers => {
-  return _.reduce(
+  const totalLength = _.reduce(
     arrayBuffers,
-    (result, arrayBuffer) => {
-      const appendedArrayBuffer = new Uint8Array(
-        result.byteLength + arrayBuffer.byteLength
-      );
-      appendedArrayBuffer.set(new Uint8Array(result), 0);
-      appendedArrayBuffer.set(new Uint8Array(arrayBuffer), result.byteLength);
-      return appendedArrayBuffer.buffer;
+    (acc, buff) => {
+      return acc + buff.byteLength;
     },
-    new ArrayBuffer()
+    0
   );
+  const mergedBuffer = new Uint8Array(totalLength);
+
+  // This mutates mergedBuffer for efficiency.
+  _.reduce(
+    arrayBuffers,
+    ({ mergedBuffer, idx }, buff) => {
+      mergedBuffer.set(new Uint8Array(buff), idx);
+      return { mergedBuffer, idx: idx + buff.byteLength };
+    },
+    { mergedBuffer, idx: 0 }
+  );
+
+  return mergedBuffer.buffer;
 };
 
 const chunkGenerator = ({ idx, data, hash }) => {
@@ -148,34 +156,34 @@ const createUploadSession = (host, fileSizeBytes, genesisHash) =>
       });
   });
 
-const createReader = onRead => {
-  const reader = new FileReader();
-  reader.onloadend = function(evt) {
-    if (evt.target.readyState === FileReader.DONE) {
-      const arrayBuffer = evt.target.result;
-      onRead(arrayBuffer);
-    }
-  };
-  return reader;
-};
+const readBlob = blob =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = function(evt) {
+      if (evt.target.readyState === FileReader.DONE) {
+        const arrayBuffer = evt.target.result;
+        resolve(arrayBuffer);
+      }
+    };
+    reader.readAsArrayBuffer(blob);
+  });
 
-const sendChunkToBroker = (
-  host,
-  sessionId,
-  chunkIdx,
-  arrayBuffer,
-  handle,
-  genesisHash
-) =>
+const createChunk = (blob, idx, handle, genesisHash) =>
+  new Promise((resolve, reject) => {
+    readBlob(blob).then(arrayBuffer => {
+      const chunk = chunkGenerator({
+        idx,
+        data: chunkToIotaFormat(arrayBuffer, handle),
+        hash: genesisHash
+      });
+      resolve(chunk);
+    });
+  });
+
+const sendChunksToBroker = (host, sessionId, chunks) =>
   new Promise((resolve, reject) => {
     axiosInstance
-      .put(`${host}${API.V1_UPLOAD_SESSIONS_PATH}/${sessionId}`, {
-        chunk: chunkGenerator({
-          idx: chunkIdx,
-          data: chunkToIotaFormat(arrayBuffer, handle),
-          hash: genesisHash
-        })
-      })
+      .put(`${host}${API.V1_UPLOAD_SESSIONS_PATH}/${sessionId}`, { chunks })
       .then(response => {
         console.log("SENT CHUNK TO BROKER: ", response);
         resolve(response);
@@ -195,26 +203,22 @@ const sendFileContentsToBroker = (
   byteChunks,
   sliceCutOffFn
 ) => {
-  const chunkRequests = byteChunks.map(
-    byte =>
+  const batchedChunks = _.chunk(byteChunks, API.CHUNKS_PER_REQUEST);
+  const chunkRequests = batchedChunks.map(
+    byteChunkBatch =>
       new Promise((resolve, reject) => {
-        const { chunkIdx, chunkStartingPoint } = byte;
-        const blob = file.slice(
-          chunkStartingPoint,
-          sliceCutOffFn(chunkStartingPoint)
-        );
-
-        const reader = createReader(arrayBuffer => {
-          sendChunkToBroker(
-            host,
-            sessionId,
-            chunkIdx,
-            arrayBuffer,
-            handle,
-            genesisHash
-          ).then(resolve);
+        const chunks = byteChunkBatch.map(byte => {
+          const { chunkIdx, chunkStartingPoint } = byte;
+          const blob = file.slice(
+            chunkStartingPoint,
+            sliceCutOffFn(chunkStartingPoint)
+          );
+          return createChunk(blob, chunkIdx, handle, genesisHash);
         });
-        reader.readAsArrayBuffer(blob);
+
+        Promise.all(chunks).then(arrayOfChunks => {
+          sendChunksToBroker(host, sessionId, arrayOfChunks).then(resolve);
+        });
       })
   );
 
@@ -226,11 +230,13 @@ const sendMetaDataToBroker = (host, sessionId, file, handle, genesisHash) =>
     const metaDataObject = createMetaDataObject(file);
     axiosInstance
       .put(`${host}${API.V1_UPLOAD_SESSIONS_PATH}/${sessionId}`, {
-        chunk: chunkGenerator({
-          idx: 0,
-          data: metaDataToIotaFormat(metaDataObject, handle),
-          hash: genesisHash
-        })
+        chunks: [
+          chunkGenerator({
+            idx: 0,
+            data: metaDataToIotaFormat(metaDataObject, handle),
+            hash: genesisHash
+          })
+        ]
       })
       .then(({ data }) => {
         console.log("METADATA TO BROKER SUCCESS: ", data);
@@ -304,13 +310,13 @@ const createMetaDataObject = file => {
 export default {
   initializeUpload,
   uploadFileToBrokerNodes,
-  sendChunkToBroker,
+  sendChunksToBroker,
   createByteChunks,
   createUploadSession,
   metaDataToIotaFormat,
   metaDataFromIotaFormat,
   chunkToIotaFormat,
   chunkFromIotaFormat,
-  createReader,
-  mergeArrayBuffers
+  mergeArrayBuffers,
+  readBlob
 };
